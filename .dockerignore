@@ -1,0 +1,7 @@
+.git
+__pycache__/
+*.ipynb
+*.csv
+*.zip
+node_modules/
+data/
