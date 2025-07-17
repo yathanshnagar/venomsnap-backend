@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Venom Snap: Snake Classifier</title>
+  <style>
+    body { font-family: sans-serif; background: #f3f3f9; padding: 30px; }
+    .container { max-width: 420px; background: white; border-radius: 14px; box-shadow: 0 2px 12px #0001; padding: 24px; margin: auto; }
+    h1 { color: #245266; margin-bottom: 12px;}
+    #output { margin-top: 24px; background: #eaf7ef; border-radius: 8px; padding: 16px; font-size: 1.1em; }
+    #snake-img { margin-top: 20px; max-width: 100%; border-radius: 8px; }
+    .loader { display: none; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Venom Snap 🐍</h1>
+  <form id="upload-form">
+    <label>Upload a snake image:<br>
+      <input type="file" id="file" name="file" accept="image/*" required>
+    </label>
+    <br><br>
+    <button type="submit">Predict</button>
+    <span class="loader" id="loader">⏳ Predicting...</span>
+  </form>
+  <img id="snake-img" style="display:none;">
+  <div id="output"></div>
+</div>
+
+<script>
+  const form = document.getElementById('upload-form');
+  const output = document.getElementById('output');
+  const loader = document.getElementById('loader');
+  const snakeImg = document.getElementById('snake-img');
+
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    output.innerHTML = "";
+    loader.style.display = 'inline';
+    snakeImg.style.display = 'none';
+
+    const fileInput = document.getElementById('file');
+    if (!fileInput.files.length) {
+      loader.style.display = 'none';
+      output.innerHTML = "Please select an image file.";
+      return;
+    }
+
+    // Show preview
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+    reader.onload = e => {
+      snakeImg.src = e.target.result;
+      snakeImg.style.display = "block";
+    };
+    reader.readAsDataURL(file);
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch('/predict/', {
+        method: 'POST',
+        body: formData
+      });
+      const result = await response.json();
+      loader.style.display = 'none';
+      if (result.error) {
+        output.innerHTML = `<b>Error:</b> ${result.error}`;
+      } else {
+        output.innerHTML = `
+          <b>Family:</b> ${result.family}<br>
+          <b>Sub-Family:</b> ${result.sub_family}<br>
+          <b>Antidote:</b> ${result.antidote}
+        `;
+      }
+    } catch (err) {
+      loader.style.display = 'none';
+      output.innerHTML = "Failed to connect to backend!";
+    }
+  };
+</script>
+</body>
+</html>
